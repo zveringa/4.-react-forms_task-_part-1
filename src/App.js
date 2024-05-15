@@ -11,6 +11,16 @@ export const App = () => {
 	const [password2, setPassword2] = useState('');
 	const [loginError, setLoginError] = useState(null);
 
+	const onEmailChange = ({ target }) => {
+		const emailValue = target.value;
+		setEmail(emailValue);
+
+		if (!emailValue) {
+			setLoginError('Введите e-mail!');
+		} else {
+			setLoginError(null);
+		}
+	};
 	const onPasswordChange = ({ target }) => {
 		setPassword(target.value);
 
@@ -19,26 +29,51 @@ export const App = () => {
 		if (!/^[\w_]*$/.test(target.value)) {
 			newError =
 				'Неверный логин. Допустимые символы: буквы, цифры и нижнее подчёркивание';
-		} else if (target.value.length > 20) {
-			newError = 'Неверный логин. Должно быть не больше 20 символов';
+		} else if (target.value.length > 10) {
+			newError = 'Неверный логин. Должно быть не больше 10 символов';
 		}
 
 		setLoginError(newError);
 	};
-
+	const onEmailBlur = () => {
+		const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailPattern.test(email)) {
+			setLoginError('Неверный формат e-mail!');
+		}
+	};
 	const onPasswordBlur = () => {
 		if (password.length < 3) {
-			setLoginError('Неверный логин. Должно быть не menьше 3 символов');
+			setLoginError('Неверный логин. Должно быть не меньше 3 символов');
 		}
 	};
 
 	const onSubmit = (event) => {
 		event.preventDefault();
-		// sendFormData({ email, password });
+
+		if (!email) {
+			setLoginError('Введите e-mail!');
+			return;
+		}
+
+		const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailPattern.test(email)) {
+			setLoginError('Неверный формат e-mail!');
+			return;
+		}
+
+		if (password !== password2) {
+			setLoginError(
+				'Повторный пароль не совпадает с первоначальным , повторите пароль',
+			);
+			setPassword('');
+			setPassword2('');
+		} else {
+			setLoginError(null);
+			sendFormData({ email, password });
+		}
+
 		console.log(email, password);
 	};
-
-	// 'Повторный пароль не совпадает с первоначальным , повторите пароль'
 
 	return (
 		<div className={styles.app}>
@@ -49,7 +84,9 @@ export const App = () => {
 					type="email"
 					placeholder="e-mail"
 					value={email}
-					onChange={({ target }) => setEmail(target.value)}
+					onChange={onEmailChange}
+					onBlur={onEmailBlur}
+					required
 				/>
 				<input
 					name="password"
@@ -58,6 +95,7 @@ export const App = () => {
 					value={password}
 					onChange={onPasswordChange}
 					onBlur={onPasswordBlur}
+					required
 				/>
 				<input
 					name="password2"
@@ -65,6 +103,7 @@ export const App = () => {
 					placeholder="Повторите Пароль"
 					value={password2}
 					onChange={({ target }) => setPassword2(target.value)}
+					required
 				/>
 				<button type="submit" disabled={loginError !== null}>
 					Зарегистрироваться
