@@ -1,5 +1,5 @@
 import styles from './app.module.css';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const sendFormData = (formData) => {
 	console.log(formData);
@@ -8,17 +8,29 @@ const sendFormData = (formData) => {
 export const App = () => {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
-	const [password2, setPassword2] = useState('');
+	const [password_2, setPassword_2] = useState('');
 	const [loginError, setLoginError] = useState(null);
 
-	const onEmailChange = ({ target }) => {
-		const emailValue = target.value;
-		setEmail(emailValue);
+	const submitButtonRef = useRef(null);
 
-		if (!emailValue) {
-			setLoginError('Введите e-mail!');
-		} else {
-			setLoginError(null);
+	useEffect(() => {
+		submitButtonRef.current.focus();
+	});
+
+	const onEmailChange = ({ target }) => {
+		setEmail(target.value);
+
+		// if (!target.value) {
+		// 	setLoginError('Введите e-mail!');
+		// } else {
+		// 	setLoginError(null);
+		// }
+	};
+	const onEmailBlur = (target) => {
+		setEmail(target.value);
+		const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailPattern.test(email.current)) {
+			setLoginError('Неверный формат e-mail!');
 		}
 	};
 	const onPasswordChange = ({ target }) => {
@@ -34,45 +46,38 @@ export const App = () => {
 		}
 
 		setLoginError(newError);
-	};
-	const onEmailBlur = () => {
-		const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (!emailPattern.test(email)) {
-			setLoginError('Неверный формат e-mail!');
+
+		if (loginError === null && email && password === password_2) {
+			submitButtonRef.current.focus();
 		}
 	};
+
 	const onPasswordBlur = () => {
 		if (password.length < 3) {
 			setLoginError('Неверный логин. Должно быть не меньше 3 символов');
 		}
 	};
 
-	const onSubmit = (event) => {
-		event.preventDefault();
-
-		if (!email) {
-			setLoginError('Введите e-mail!');
-			return;
-		}
-
-		const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (!emailPattern.test(email)) {
-			setLoginError('Неверный формат e-mail!');
-			return;
-		}
-
-		if (password !== password2) {
+	const onPassword_2Blur = () => {
+		if (password !== password_2) {
 			setLoginError(
 				'Повторный пароль не совпадает с первоначальным , повторите пароль',
 			);
-			setPassword('');
-			setPassword2('');
+			// setPassword('');
+			setPassword_2('');
 		} else {
 			setLoginError(null);
 			sendFormData({ email, password });
 		}
+	};
 
-		console.log(email, password);
+	const onSubmit = (event) => {
+		event.preventDefault();
+
+		//check-up
+		console.log(
+			`email: ${email}, password: ${password}, password_2: ${password_2}, loginError: ${loginError}`,
+		);
 	};
 
 	return (
@@ -98,14 +103,19 @@ export const App = () => {
 					required
 				/>
 				<input
-					name="password2"
+					name="password_2"
 					type="password"
 					placeholder="Повторите Пароль"
-					value={password2}
-					onChange={({ target }) => setPassword2(target.value)}
+					value={password_2}
+					onChange={({ target }) => setPassword_2(target.value)}
+					onBlur={onPassword_2Blur}
 					required
 				/>
-				<button type="submit" disabled={loginError !== null}>
+				<button
+					ref={submitButtonRef}
+					type="submit"
+					disabled={loginError !== null}
+				>
 					Зарегистрироваться
 				</button>
 			</form>
