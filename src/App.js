@@ -1,5 +1,5 @@
 import styles from './app.module.css';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const sendFormData = (formData) => {
 	console.log(formData);
@@ -8,47 +8,39 @@ const sendFormData = (formData) => {
 export const App = () => {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
-	const [password_2, setPassword_2] = useState('');
+	const [password2, setPassword2] = useState('');
 	const [loginError, setLoginError] = useState(null);
 
-	const submitButtonRef = useRef(null);
-
-	useEffect(() => {
-		submitButtonRef.current.focus();
-	});
-
 	const onEmailChange = ({ target }) => {
-		setEmail(target.value);
+		const emailValue = target.value;
+		setEmail(emailValue);
 
-		// if (!target.value) {
-		// 	setLoginError('Введите e-mail!');
-		// } else {
-		// 	setLoginError(null);
-		// }
-	};
-	const onEmailBlur = (target) => {
-		setEmail(target.value);
-		const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (!emailPattern.test(email.current)) {
-			setLoginError('Неверный формат e-mail!');
+		if (!emailValue) {
+			setLoginError('Введите e-mail!');
+		} else {
+			setLoginError(null);
 		}
 	};
+
 	const onPasswordChange = ({ target }) => {
-		setPassword(target.value);
+		const passwordValue = target.value;
+		setPassword(passwordValue);
 
 		let newError = null;
-
-		if (!/^[\w_]*$/.test(target.value)) {
+		if (!/^[\w_]*$/.test(passwordValue)) {
 			newError =
 				'Неверный логин. Допустимые символы: буквы, цифры и нижнее подчёркивание';
-		} else if (target.value.length > 10) {
+		} else if (passwordValue.length > 10) {
 			newError = 'Неверный логин. Должно быть не больше 10 символов';
 		}
 
 		setLoginError(newError);
+	};
 
-		if (loginError === null && email && password === password_2) {
-			submitButtonRef.current.focus();
+	const onEmailBlur = () => {
+		const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailPattern.test(email)) {
+			setLoginError('Неверный формат e-mail!');
 		}
 	};
 
@@ -58,26 +50,46 @@ export const App = () => {
 		}
 	};
 
-	const onPassword_2Blur = () => {
-		if (password !== password_2) {
+	const onPassword2Blur = () => {
+		if (password !== password2) {
 			setLoginError(
-				'Повторный пароль не совпадает с первоначальным , повторите пароль',
+				'Повторный пароль не совпадает с первоначальным, повторите пароль',
 			);
-			// setPassword('');
-			setPassword_2('');
+			setPassword('');
+			setPassword2('');
 		} else {
 			setLoginError(null);
-			sendFormData({ email, password });
 		}
 	};
+
+	const submitButtonRef = useRef(null);
+
+	useEffect(() => {
+		if (!loginError && email && password && password2 && password === password2) {
+			submitButtonRef.current.focus();
+		}
+	}, [loginError, email, password, password2]);
 
 	const onSubmit = (event) => {
 		event.preventDefault();
 
-		//check-up
-		console.log(
-			`email: ${email}, password: ${password}, password_2: ${password_2}, loginError: ${loginError}`,
-		);
+		if (!email) {
+			setLoginError('Введите e-mail!');
+			return;
+		}
+
+		const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailPattern.test(email)) {
+			setLoginError('Неверный формат e-mail!');
+			return;
+		}
+
+		if (loginError) {
+			return;
+		}
+
+		sendFormData({ email, password });
+		console.log(email, password);
 	};
 
 	return (
@@ -103,18 +115,24 @@ export const App = () => {
 					required
 				/>
 				<input
-					name="password_2"
+					name="password2"
 					type="password"
 					placeholder="Повторите Пароль"
-					value={password_2}
-					onChange={({ target }) => setPassword_2(target.value)}
-					onBlur={onPassword_2Blur}
-					required
+					value={password2}
+					onChange={({ target }) => setPassword2(target.value)}
+					onBlur={onPassword2Blur}
+					disabled={loginError}
 				/>
 				<button
-					ref={submitButtonRef}
 					type="submit"
-					disabled={loginError !== null}
+					disabled={
+						loginError ||
+						!email ||
+						!password ||
+						!password2 ||
+						password !== password2
+					}
+					ref={submitButtonRef}
 				>
 					Зарегистрироваться
 				</button>
